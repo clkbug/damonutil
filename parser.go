@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-type DamonFile struct {
+type Result struct {
 	Version uint32 // 1 or 2
 	Records []Record
 }
@@ -31,7 +31,7 @@ type Region struct {
 	AgeUnit          string
 }
 
-func ParseDamonFile(filepath string) (*DamonFile, error) {
+func ParseDamonFile(filepath string) (*Result, error) {
 	fp, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func ParseDamonFile(filepath string) (*DamonFile, error) {
 		return nil, fmt.Errorf("invalid header: %s", string(s))
 	}
 
-	file := &DamonFile{}
+	result := &Result{}
 
 	// 4 bytes for the version
 	v, err := readUint32(fp)
@@ -61,7 +61,7 @@ func ParseDamonFile(filepath string) (*DamonFile, error) {
 	if v != 2 {
 		return nil, fmt.Errorf("invalid version: %d (only version 2 is supported)", v)
 	}
-	file.Version = v
+	result.Version = v
 
 	startTime := uint64(0)
 
@@ -74,37 +74,37 @@ func ParseDamonFile(filepath string) (*DamonFile, error) {
 			if err == io.EOF {
 				break
 			}
-			return file, fmt.Errorf("end time sec error: %s", err.Error())
+			return result, fmt.Errorf("end time sec error: %s", err.Error())
 		}
 		nsec, err := readUint64(fp)
 		if err != nil {
-			return file, fmt.Errorf("end time nsec error: %s", err.Error())
+			return result, fmt.Errorf("end time nsec error: %s", err.Error())
 		}
 		endTime := sec*1000000000 + nsec
 
 		// 4 bytes for the number of results
 		nr, err := readUint32(fp)
 		if err != nil {
-			return file, fmt.Errorf("number of results error: %s", err.Error())
+			return result, fmt.Errorf("number of results error: %s", err.Error())
 		}
 
 		r := Record{}
 		for i := 0; i < int(nr); i++ {
 			snapshot, err := parseSnapshot(fp)
 			if err != nil {
-				return file, err
+				return result, err
 			}
 			snapshot.StartTime = startTime
 			snapshot.EndTime = endTime
 			r.Snapshots = append(r.Snapshots, snapshot)
 		}
 
-		file.Records = append(file.Records, r)
+		result.Records = append(result.Records, r)
 
 		startTime = endTime // for the next record
 	}
 
-	return file, nil
+	return result, nil
 }
 
 func parseSnapshot(buf io.Reader) (Snapshot, error) {
