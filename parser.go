@@ -139,27 +139,27 @@ func parseSnapshot(buf io.Reader) (Snapshot, error) {
 }
 
 func parseRegion(buf io.Reader) (Region, error) {
-	s := Region{}
+	r := Region{Age: -1}
 
 	startAddr, err := readUint64(buf)
 	if err != nil {
-		return s, fmt.Errorf("start address error: %s", err.Error())
+		return r, fmt.Errorf("start address error: %s", err.Error())
 	}
-	s.StartAddr = startAddr
+	r.StartAddr = startAddr
 
 	endAddr, err := readUint64(buf)
 	if err != nil {
-		return s, fmt.Errorf("end address error: %s", err.Error())
+		return r, fmt.Errorf("end address error: %s", err.Error())
 	}
-	s.EndAddr = endAddr
+	r.EndAddr = endAddr
 
 	accesses, err := readUint32(buf)
 	if err != nil {
-		return s, fmt.Errorf("number of accesses error: %s", err.Error())
+		return r, fmt.Errorf("number of accesses error: %s", err.Error())
 	}
-	s.NumberOfAccesses = accesses
+	r.NumberOfAccesses = accesses
 
-	return s, nil
+	return r, nil
 }
 
 func readUint32(buf io.Reader) (uint32, error) {
