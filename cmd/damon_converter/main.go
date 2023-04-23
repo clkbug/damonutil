@@ -1,33 +1,63 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	damonuntil "github.com/clkbug/damonutil"
 )
 
+type cmdOptions struct {
+	input  string
+	output string
+}
+
+var cmdopt cmdOptions
+
+func init() {
+	flag.StringVar(&cmdopt.input, "input", "damon.data", "input file path (default: damon.data)")
+	flag.StringVar(&cmdopt.output, "output", "", "output file path (default: stdout)")
+}
+
 func main() {
-	err := run()
+	flag.Parse()
+
+	err := run(cmdopt)
 	if err != nil {
 		fmt.Printf("error: %s", err.Error())
 		os.Exit(1)
 	}
 }
 
-func run() error {
-	input := "damon.data"
-
-	if len(os.Args) > 1 {
-		input = os.Args[1]
-	}
-
-	damon, err := damonuntil.ParseDamonFile(input)
+func run(cmdopt cmdOptions) error {
+	damon, err := damonuntil.ParseDamonFile(cmdopt.input)
 	if err != nil {
 		return err
 	}
 
-	printDamonResult(damon)
+	if cmdopt.output == "" {
+		printDamonResult(damon)
+		return nil
+	}
+
+	if strings.HasSuffix(cmdopt.output, ".json") {
+		fp, err := os.Create(cmdopt.output)
+		if err != nil {
+			return err
+		}
+		defer fp.Close()
+		buf := bufio.NewWriter(fp)
+		if err := json.NewEncoder(buf).Encode(damon); err != nil {
+			return err
+		}
+		if err := buf.Flush(); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

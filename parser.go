@@ -7,28 +7,28 @@ import (
 )
 
 type Result struct {
-	Version uint32 // 1 or 2
-	Records []Record
+	Version uint32   `json:"version"` // 1 or 2
+	Records []Record `json:"records"`
 }
 
 type Record struct {
-	TargetId  uint64
-	Snapshots []Snapshot
+	TargetId  uint64     `json:"target_id"`
+	Snapshots []Snapshot `json:"snapshots"`
 }
 
 type Snapshot struct {
-	TargetId  uint64
-	StartTime uint64
-	EndTime   uint64
-	Regions   []Region
+	TargetId  uint64   `json:"target_id"`
+	StartTime uint64   `json:"start_time"` // [ns]
+	EndTime   uint64   `json:"end_time"`   // [ns]
+	Regions   []Region `json:"regions"`
 }
 
 type Region struct {
-	StartAddr        uint64
-	EndAddr          uint64
-	NumberOfAccesses uint32
-	Age              int
-	AgeUnit          string
+	StartAddr        uint64 `json:"start_addr"`
+	EndAddr          uint64 `json:"end_addr"`
+	NumberOfAccesses uint32 `json:"number_of_accesses"`
+	Age              int    `json:"age"`
+	AgeUnit          string `json:"age_unit"`
 }
 
 func ParseDamonFile(filepath string) (*Result, error) {
