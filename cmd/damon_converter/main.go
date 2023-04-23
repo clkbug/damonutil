@@ -57,8 +57,32 @@ func run(cmdopt cmdOptions) error {
 		if err := buf.Flush(); err != nil {
 			return err
 		}
+
+		return nil
 	}
 
+	if strings.HasSuffix(cmdopt.output, ".csv") {
+		fp, err := os.Create(cmdopt.output)
+		if err != nil {
+			return err
+		}
+		defer fp.Close()
+		buf := bufio.NewWriter(fp)
+		fmt.Fprintf(buf, "monitoring_start,monitoring_end,monitoring_duration,target_id,start_addr,end_addr,length,nr_accesses,age\n")
+		for _, record := range damon.Records {
+			for _, snapshot := range record.Snapshots {
+				for _, region := range snapshot.Regions {
+					fmt.Fprintf(buf, "%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+						snapshot.StartTime, snapshot.EndTime, snapshot.EndTime-snapshot.StartTime, snapshot.TargetId, region.StartAddr, region.EndAddr, region.EndAddr-region.StartAddr, region.NumberOfAccesses, region.Age)
+				}
+				fmt.Fprintln(buf)
+			}
+		}
+		if err := buf.Flush(); err != nil {
+			return err
+		}
+		return nil
+	}
 	return nil
 }
 
